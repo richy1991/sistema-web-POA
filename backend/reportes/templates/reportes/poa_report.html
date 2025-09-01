@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de POA</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            width: 90%;
+            margin: auto;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .info-table th, .info-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .info-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Detalle del Plan Operativo Anual (POA)</h1>
+
+        <table class="info-table">
+            <tr>
+                <th>ID del POA</th>
+                <td>{{ poa.id_poa }}</td>
+            </tr>
+            <tr>
+                <th>Carrera</th>
+                <td>{{ poa.id_carrera.nombre }}</td>
+            </tr>
+            <tr>
+                <th>Gestión</th>
+                <td>{{ poa.gestion }}</td>
+            </tr>
+            <tr>
+                <th>Unidad Solicitante</th>
+                <td>{{ poa.unidad_solicitante }}</td>
+            </tr>
+            <tr>
+                <th>Estado</th>
+                <td>{{ poa.estado }}</td>
+            </tr>
+            <tr>
+                <th>Objetivo Institucional</th>
+                <td>{{ poa.objetivo_institucional }}</td>
+            </tr>
+            <tr>
+                <th>Fecha de Creación</th>
+                <td>{{ poa.fecha_creacion }}</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
