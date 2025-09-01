@@ -1,6 +1,6 @@
 from django.urls import path
-from . import views
+from .views import KpiView
 
 urlpatterns = [
-    # Add your URLs here
+    path('kpis/', KpiView.as_view(), name='panel-kpis'),
 ]
