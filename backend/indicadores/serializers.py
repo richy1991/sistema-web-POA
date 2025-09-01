@@ -1,4 +1,7 @@
 from rest_framework import serializers
-from .models import *
+from .models import Indicadores
 
-# Add your serializers here
+class IndicadoresSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Indicadores
+        fields = '__all__'

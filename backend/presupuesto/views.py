@@ -1,6 +1,11 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import viewsets
+from .models import ItemsPoa, EjecucionPresupuestaria
+from .serializers import ItemsPoaSerializer, EjecucionPresupuestariaSerializer
 
-# Add your views here
+class ItemsPoaViewSet(viewsets.ModelViewSet):
+    queryset = ItemsPoa.objects.all()
+    serializer_class = ItemsPoaSerializer
+
+class EjecucionPresupuestariaViewSet(viewsets.ModelViewSet):
+    queryset = EjecucionPresupuestaria.objects.all()
+    serializer_class = EjecucionPresupuestariaSerializer
