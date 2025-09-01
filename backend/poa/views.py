@@ -7,23 +7,24 @@ from .serializers import (
     ActividadPoaResponsablesSerializer,
     CronogramaPoaSerializer,
 )
+from nucleo.views import CustomModelViewSet
 
-class PoaViewSet(viewsets.ModelViewSet):
+class PoaViewSet(CustomModelViewSet):
     queryset = Poa.objects.all()
     serializer_class = PoaSerializer
 
-class ObjetivoEspecificoViewSet(viewsets.ModelViewSet):
+class ObjetivoEspecificoViewSet(CustomModelViewSet):
     queryset = ObjetivoEspecifico.objects.all()
     serializer_class = ObjetivoEspecificoSerializer
 
-class ActividadPoaViewSet(viewsets.ModelViewSet):
+class ActividadPoaViewSet(CustomModelViewSet):
     queryset = ActividadPoa.objects.all()
     serializer_class = ActividadPoaSerializer
 
-class ActividadPoaResponsablesViewSet(viewsets.ModelViewSet):
+class ActividadPoaResponsablesViewSet(CustomModelViewSet):
     queryset = ActividadPoaResponsables.objects.all()
     serializer_class = ActividadPoaResponsablesSerializer
 
-class CronogramaPoaViewSet(viewsets.ModelViewSet):
+class CronogramaPoaViewSet(CustomModelViewSet):
     queryset = CronogramaPoa.objects.all()
     serializer_class = CronogramaPoaSerializer

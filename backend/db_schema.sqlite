@@ -1,0 +1,302 @@
+-- ===========================
+-- TABLAS COMUNES
+-- ===========================
+
+CREATE TABLE usuarios (
+    id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    correo TEXT UNIQUE NOT NULL,
+    contrasena TEXT NOT NULL,
+    rol TEXT CHECK (rol IN ('Administrador', 'Docente', 'Estudiante', 'Administrativo')) NOT NULL,
+    estado INTEGER DEFAULT 1,
+    ultimo_login DATETIME,
+    intentos_fallidos INTEGER DEFAULT 0,
+    bloqueado INTEGER DEFAULT 0,
+    fecha_registro DATETIME DEFAULT (datetime('now','localtime')),
+    fecha_modificacion DATETIME,
+    creado_por INTEGER,
+    modificado_por INTEGER
+);
+
+CREATE TABLE carrera (
+    id_carrera INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL UNIQUE,
+    descripcion TEXT,
+    fecha_creacion DATETIME DEFAULT (datetime('now','localtime')),
+    fecha_modificacion DATETIME,
+    creado_por INTEGER,
+    modificado_por INTEGER
+);
+
+CREATE TABLE departamentos (
+    id_departamento INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    descripcion TEXT
+);
+
+-- ===========================
+-- ESTADOS Y REFERENCIAS
+-- ===========================
+
+CREATE TABLE estados_actividad (
+    id_estado INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL UNIQUE,
+    descripcion TEXT,
+    color TEXT
+);
+
+CREATE TABLE tipo_indicador (
+    id_tipo INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT UNIQUE NOT NULL,
+    descripcion TEXT,
+    formula TEXT
+);
+
+CREATE TABLE partidas_presupuestarias (
+    codigo_partida TEXT PRIMARY KEY,
+    descripcion TEXT
+);
+
+-- ===========================
+-- POA
+-- ===========================
+
+CREATE TABLE programa_poa (
+    id_programa INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    descripcion TEXT
+);
+
+CREATE TABLE poa (
+    id_poa INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_carrera INTEGER NOT NULL,
+    id_programa INTEGER,
+    gestion INTEGER NOT NULL,
+    unidad_solicitante TEXT NOT NULL,
+    objetivo_institucional TEXT NOT NULL,
+    estado TEXT CHECK (estado IN ('Borrador', 'Aprobado', 'Ejecutado', 'Archivado')) DEFAULT 'Borrador',
+    fecha_creacion DATE DEFAULT (date('now')),
+    FOREIGN KEY (id_carrera) REFERENCES carrera(id_carrera),
+    FOREIGN KEY (id_programa) REFERENCES programa_poa(id_programa)
+);
+
+CREATE TABLE objetivo_especifico (
+    id_objetivo INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_poa INTEGER NOT NULL,
+    codigo TEXT NOT NULL,
+    descripcion TEXT NOT NULL,
+    meta TEXT,
+    linea_base TEXT,
+    FOREIGN KEY (id_poa) REFERENCES poa(id_poa)
+);
+
+CREATE TABLE actividad_poa (
+    id_actividad INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_objetivo INTEGER NOT NULL,
+    codigo TEXT NOT NULL,
+    nombre TEXT NOT NULL,
+    producto_esperado TEXT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    id_estado INTEGER,
+    avance_fisico REAL,
+    avance_financiero REAL,
+    anio INTEGER,
+    fecha_creacion DATETIME DEFAULT (datetime('now','localtime')),
+    fecha_modificacion DATETIME,
+    creado_por INTEGER,
+    modificado_por INTEGER,
+    FOREIGN KEY (id_objetivo) REFERENCES objetivo_especifico(id_objetivo),
+    FOREIGN KEY (id_estado) REFERENCES estados_actividad(id_estado)
+);
+
+CREATE TABLE actividad_poa_responsables (
+    id_actividad INTEGER NOT NULL,
+    id_usuario INTEGER NOT NULL,
+    PRIMARY KEY (id_actividad, id_usuario),
+    FOREIGN KEY (id_actividad) REFERENCES actividad_poa(id_actividad),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
+
+CREATE TABLE indicadores (
+    id_indicador INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_actividad INTEGER NOT NULL,
+    nombre TEXT NOT NULL,
+    tipo_id INTEGER,
+    formula TEXT,
+    frecuencia TEXT,
+    fuente_dato TEXT,
+    linea_base TEXT,
+    meta TEXT,
+    unidad_medida TEXT,
+    FOREIGN KEY (id_actividad) REFERENCES actividad_poa(id_actividad),
+    FOREIGN KEY (tipo_id) REFERENCES tipo_indicador(id_tipo)
+);
+
+CREATE TABLE items_poa (
+    id_item INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_actividad INTEGER NOT NULL,
+    descripcion TEXT NOT NULL,
+    unidad TEXT,
+    cantidad INTEGER CHECK (cantidad > 0),
+    costo_unitario REAL,
+    subtotal REAL,
+    fuente_financiamiento TEXT,
+    codigo_partida TEXT,
+    FOREIGN KEY (id_actividad) REFERENCES actividad_poa(id_actividad),
+    FOREIGN KEY (codigo_partida) REFERENCES partidas_presupuestarias(codigo_partida)
+);
+
+CREATE TABLE ejecucion_presupuestaria (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_item INTEGER NOT NULL,
+    fecha DATE NOT NULL,
+    monto_ejecutado REAL NOT NULL,
+    descripcion TEXT,
+    FOREIGN KEY (id_item) REFERENCES items_poa(id_item)
+);
+
+CREATE TABLE cronograma_poa (
+    id_cronograma INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_actividad INTEGER NOT NULL,
+    mes INTEGER CHECK (mes BETWEEN 1 AND 12),
+    ejecutado INTEGER DEFAULT 0,
+    FOREIGN KEY (id_actividad) REFERENCES actividad_poa(id_actividad)
+);
+
+-- ===========================
+-- FONDO DE TIEMPO
+-- ===========================
+
+CREATE TABLE docentes (
+    id_docente INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_usuario INTEGER NOT NULL,
+    ci TEXT UNIQUE NOT NULL,
+    tipo_contrato TEXT CHECK (tipo_contrato IN ('Tiempo Completo', 'Tiempo Horario')) NOT NULL,
+    funcion_administrativa TEXT,
+    email TEXT,
+    telefono TEXT,
+    fecha_contratacion DATE,
+    estado TEXT CHECK (estado IN ('Activo', 'Inactivo')) NOT NULL,
+    id_departamento INTEGER,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+    FOREIGN KEY (id_departamento) REFERENCES departamentos(id_departamento)
+);
+
+CREATE TABLE asignaturas (
+    id_asignatura INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    sigla TEXT UNIQUE NOT NULL,
+    area TEXT NOT NULL,
+    horas_teoricas INTEGER NOT NULL CHECK (horas_teoricas >= 0),
+    horas_practicas INTEGER NOT NULL CHECK (horas_practicas >= 0),
+    horas_laboratorio INTEGER NOT NULL CHECK (horas_laboratorio >= 0),
+    prerrequisitos TEXT,
+    creditos INTEGER CHECK (creditos >= 0),
+    id_departamento INTEGER,
+    FOREIGN KEY (id_departamento) REFERENCES departamentos(id_departamento)
+);
+
+CREATE TABLE actividad_fondo_tiempo (
+    id_actividad INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_docente INTEGER NOT NULL,
+    id_asignatura INTEGER,
+    tipo TEXT CHECK (tipo IN ('Docencia', 'Investigación', 'Extensión', 'Gestión', 'Vida Universitaria')),
+    descripcion TEXT,
+    horas_semanales INTEGER NOT NULL CHECK (horas_semanales >= 0),
+    responsable INTEGER NOT NULL,
+    FOREIGN KEY (id_docente) REFERENCES docentes(id_docente),
+    FOREIGN KEY (id_asignatura) REFERENCES asignaturas(id_asignatura),
+    FOREIGN KEY (responsable) REFERENCES usuarios(id_usuario)
+);
+
+-- ===========================
+-- PLAN DE DESARROLLO
+-- ===========================
+
+CREATE TABLE plan_desarrollo (
+    id_plan INTEGER PRIMARY KEY AUTOINCREMENT,
+    titulo TEXT NOT NULL,
+    descripcion TEXT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    estado TEXT CHECK (estado IN ('En Progreso', 'Completado', 'Pendiente')) NOT NULL,
+    id_responsable INTEGER NOT NULL,
+    FOREIGN KEY (id_responsable) REFERENCES usuarios(id_usuario)
+);
+
+CREATE TABLE objetivos (
+    id_objetivo INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_plan INTEGER NOT NULL,
+    descripcion TEXT NOT NULL,
+    tipo TEXT CHECK (tipo IN ('General', 'Específico')) NOT NULL,
+    estado TEXT CHECK (estado IN ('Pendiente', 'En Progreso', 'Cumplido')) NOT NULL,
+    FOREIGN KEY (id_plan) REFERENCES plan_desarrollo(id_plan) ON DELETE CASCADE
+);
+
+CREATE TABLE actividad_plan_desarrollo (
+    id_actividad INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_objetivo INTEGER NOT NULL,
+    nombre TEXT NOT NULL,
+    descripcion TEXT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    responsable INTEGER NOT NULL,
+    estado TEXT CHECK (estado IN ('Pendiente', 'En Progreso', 'Finalizado')) NOT NULL,
+    FOREIGN KEY (id_objetivo) REFERENCES objetivos(id_objetivo) ON DELETE CASCADE,
+    FOREIGN KEY (responsable) REFERENCES usuarios(id_usuario)
+);
+
+-- ===========================
+-- SEGUIMIENTO
+-- ===========================
+
+CREATE TABLE seguimiento (
+    id_seguimiento INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_actividad INTEGER NOT NULL,
+    modulo TEXT CHECK (modulo IN ('POA', 'FondoTiempo', 'PlanDesarrollo')) NOT NULL,
+    fecha_seguimiento DATE NOT NULL,
+    avance TEXT NOT NULL,
+    observaciones TEXT,
+    usuario_registro INTEGER NOT NULL,
+    FOREIGN KEY (usuario_registro) REFERENCES usuarios(id_usuario)
+);
+
+-- ===========================
+-- BITÁCORA
+-- ===========================
+
+CREATE TABLE bitacora (
+    id_log INTEGER PRIMARY KEY AUTOINCREMENT,
+    modulo TEXT,
+    entidad TEXT,
+    operacion TEXT CHECK (operacion IN ('INSERT', 'UPDATE', 'DELETE')),
+    id_entidad_afectada INTEGER,
+    usuario INTEGER,
+    fecha DATETIME DEFAULT (datetime('now','localtime')),
+    descripcion TEXT,
+    FOREIGN KEY (usuario) REFERENCES usuarios(id_usuario)
+);
+
+CREATE TABLE bitacora_cambios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tabla_afectada TEXT,
+    id_registro INTEGER,
+    accion TEXT,
+    usuario_id INTEGER,
+    fecha DATETIME DEFAULT (datetime('now','localtime')),
+    detalle TEXT,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario)
+);
+
+-- ===========================
+-- PERMISOS
+-- ===========================
+
+CREATE TABLE PermisosUsuarioModulo (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_usuario INTEGER NOT NULL,
+    modulo TEXT NOT NULL CHECK (modulo IN ('POA', 'FondoTiempo', 'PlanDesarrollo', 'Seguimiento')),
+    puede_modificar INTEGER DEFAULT 0,
+    FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+);
