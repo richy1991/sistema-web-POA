@@ -8,12 +8,11 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # JWT Token Endpoints
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # JWT Token Endpoints nested under /api/auth/
+    path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    # API endpoints for modular apps (in Spanish)
-    # The path is the URL, the include is the python module
+    # API endpoints for modular apps
     path('api/accounts/', include('cuentas.urls')),
     path('api/core/', include('nucleo.urls')),
     path('api/poa/', include('poa.urls')),
